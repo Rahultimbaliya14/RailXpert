@@ -37,6 +37,32 @@ h1 {
     font-weight: 600;
 }
 
+/* India flag gradient text for the main title */
+.flag-text {
+    /* saffron -> white -> green */
+    /* Use an off-white center so the middle doesn't disappear on a white page */
+    background: linear-gradient(90deg, #FF9933 0%, #F7F7F7 50%, #138808 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* ensure proper clipping on inline text and keep spacing */
+    display: inline-block;
+    vertical-align: middle;
+    font-weight: 700;
+    letter-spacing: 1px;
+    /* make gradient exactly cover the element */
+    background-size: 100% 100%;
+    background-position: center;
+    /* subtle outline/shadow so the off-white center reads on white backgrounds */
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.06);
+    text-shadow: 0 0 1px rgba(0,0,0,0.04);
+    /* make the INDIA text appear slightly superscript and centered visually */
+    font-size: 0.72em; /* smaller than the main h1 */
+    line-height: 1;
+    transform: translateY(-0.35em); /* raise upward */
+     /* small gap from 'RailXpert' */
+}
+
 /* Tabs Styling with Horizontal Scroll */
 .tabs-wrapper {
     overflow-x: auto;
@@ -2956,4 +2982,80 @@ tr:hover {
         padding: 15px 0;
         font-size: 13px;
     }
+}
+
+/* Brand name emphasis */
+.brand {
+    font-weight: 800; /* bolder than the h1 default */
+    font-size: 1.04em; /* small visual lift */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Attractive site footer */
+.site-footer {
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-top: 28px;
+    box-shadow: 0 6px 18px rgba(31,45,61,0.06);
+    border: 1px solid rgba(20,60,120,0.04);
+}
+.footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.footer-left p {
+    margin: 0;
+    color: #34495e;
+}
+.footer-left .brand-line a {
+    color: #2b72d9;
+    font-weight: 700;
+    text-decoration: none;
+}
+.footer-left .small {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Footer favicon (small logo before brand) */
+.footer-favicon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+.footer-center .footer-nav a {
+    color: #556b7a;
+    margin: 0 10px;
+    text-decoration: none;
+    font-size: 14px;
+}
+.footer-center .footer-nav a:hover{
+    color: #2b72d9;
+}
+.footer-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.social-link svg { width:20px; height:20px; fill: #6c757d; transition: transform .12s ease, fill .12s ease; }
+.social-link:hover svg { fill: #2b72d9; transform: translateY(-2px); }
+
+/* Specific hover colors */
+.social-link.web:hover svg { fill: #1f6feb; }
+.social-link.instagram:hover svg { fill: #E1306C; transform: translateY(-2px) scale(1.02); }
+
+@media (max-width: 640px) {
+    .footer-inner{ flex-direction: column; align-items: center; text-align: center; }
+    .footer-center{ order: 3; width: 100%; margin-top: 8px; }
+    .footer-right{ order: 2; }
 }

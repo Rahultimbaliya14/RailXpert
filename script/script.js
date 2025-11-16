@@ -59,7 +59,7 @@ function getTrainStatus(currentDate, runDays, runHour, runMinute, totalRunTime) 
 
 async function fetchTrainData(trainNumber) {
     try {
-        const response = await fetch(`https://node-rahul-timbaliya.vercel.app/api/train/getTrainRouteInfo/${trainNumber}`);
+        const response = await fetch(`${ibaseUrl}train/getTrainRouteInfo/${trainNumber}`);
         if (!response.ok) {
             throw new Error('Train not found or API error');
         }
@@ -138,7 +138,7 @@ async function trackTrain() {
         const depTime = trainData.departureTime.split('-')[0].trim();
         const runHour = parseInt(depTime.split(':')[0], 10);
         const runMinute = parseInt(depTime.split(':')[1], 10);
-        
+        // ${renderCoachRow(trainData.coachInfo)}
         const trainStatus = getTrainStatus(new Date(), trainData.runOn, runHour, runMinute, trainData.duration);
         const showTrackButton = trainStatus?.isRunning;
         trainInfoDiv.innerHTML = `
@@ -147,9 +147,6 @@ async function trackTrain() {
                     <div class="train-title-section">
                         <h2>${trainData.trainName} (${trainData.trainNumber})</h2>
                 </div>
-
-                ${renderCoachRow(trainData.coachInfo)}
-
                     <div class="route-segment">
                         <span class="station-code">${trainData.routeData[0].stationCode}</span>
                         <span class="station-name">${trainData.routeData[0].stationName}</span>
@@ -343,7 +340,7 @@ async function updateLiveTrainData(trainNo, isManual = false) {
         }
         const formattedDate = formatDateForAPI(journeyDate);
 
-        const response = await fetch('https://node-rahul-timbaliya.vercel.app/api/train/getTrainCurrentLocation', {
+        const response = await fetch(`${ibaseUrl}train/getTrainCurrentLocation`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1257,7 +1254,7 @@ async function fetchTrainsBetweenStations(fromStation, toStation) {
         const fromCode = fromStation.split(' - ')[0];
         const toCode = toStation.split(' - ')[0];
 
-        const response = await fetch('https://node-rahul-timbaliya.vercel.app/api/train/getBetweenTrain', {
+        const response = await fetch(`${ibaseUrl}train/getBetweenTrain`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1417,7 +1414,8 @@ function displayBtwResults(trainsData) {
 // Function to fetch PNR status
 async function fetchPnrStatus(pnrNumber) {
     try {
-        const response = await fetch(`https://node-rahul-timbaliya.vercel.app/api/train/getPNRInfo`, {
+        debugger
+        const response = await fetch(`${ibaseUrl}train/getPNRInfo`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
