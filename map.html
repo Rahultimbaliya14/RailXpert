@@ -37,9 +37,11 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             transition: transform 0.3s ease-out;
         }
+
         .leaflet-control-zoom {
             display: none !important;
         }
+
         .controls.collapsed {
             transform: translateX(calc(100% - 0px));
         }
@@ -639,6 +641,7 @@
                 transform: translate(0, 0) scale(1);
                 opacity: 0.8;
             }
+
             100% {
                 transform: translate(-20px, -40px) scale(2);
                 opacity: 0;
@@ -675,9 +678,10 @@
 
         <div class="controls-content">
             <button id="fullMapButton" onclick="fullMap()">Full Map</button>
-            
-            <select id="mapLayerSelect" style="width: 100%; margin: 10px 0; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f8fafc; color: #1f2937; font-size: 14px;">
-                 <option value="googleSat">Google Satellite</option>
+
+            <select id="mapLayerSelect"
+                style="width: 100%; margin: 10px 0; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f8fafc; color: #1f2937; font-size: 14px;">
+                <option value="googleSat">Google Satellite</option>
                 <option value="googleHybrid">Google Hybrid</option>
                 <option value="esri">Esri World Imagery</option>
                 <option value="usgs">USGS Imagery</option>
@@ -756,6 +760,35 @@
         const secretKey = sessionStorage.getItem("encryptionKey");
         const encryptedData = urlParams.get("data");
         let decryptedData = null;
+
+
+        (function checkAuthOnLoad() {
+            try {
+                const redirectIfNeeded = () => {
+                    try {
+                        const token = sessionStorage.getItem('encryptionKey');
+                        if (!token || !encryptedData) {
+                            // Use replace to avoid creating history entries
+                            console.debug('[auth] No token found on index — redirecting to login.html');
+                            window.location.replace('index.html');
+                        } else {
+                            console.debug('[auth] Token present or not on index — skipping redirect');
+                        }
+                    } catch (err) {
+                        console.warn('[auth] Error reading sessionStorage', err);
+                    }
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', redirectIfNeeded);
+                } else {
+                    redirectIfNeeded();
+                }
+            } catch (e) {
+                // ignore unexpected errors
+                console.warn('Auth check initialization error', e);
+            }
+        })();
 
         if (encryptedData && secretKey) {
             const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
@@ -1038,9 +1071,9 @@
             pane: 'shadowPane'
         });
 
-//https://tile.openstreetmap.org/{z}/{x}/{y}.png
-//https://tile.thunderforest.com/landscape/{z}/{x}/{y}.png
-//https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png
+        //https://tile.openstreetmap.org/{z}/{x}/{y}.png
+        //https://tile.thunderforest.com/landscape/{z}/{x}/{y}.png
+        //https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png
 
         // Default base layer
         googleHybrid.addTo(map);
@@ -1062,12 +1095,12 @@
         // Function to add markers for main stations only
         function addMainStationMarkers() {
             mainStation.forEach(code => {
+                console.log(mainStation);
                 try {
                     const coords = getStnLatLng(code);
                     if (coords && coords.length === 2) {
                         const lat = parseFloat(coords[0]);
                         const lng = parseFloat(coords[1]);
-
                         const myIcon = L.icon({
                             iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
                             iconSize: [25, 25],
@@ -1315,9 +1348,9 @@
         initialize();
 
         // Handle map layer changes
-        document.getElementById('mapLayerSelect').addEventListener('change', function(e) {
+        document.getElementById('mapLayerSelect').addEventListener('change', function (e) {
             const selectedLayer = e.target.value;
-            
+
             // Remove all existing layers
             map.eachLayer((layer) => {
                 if (layer instanceof L.TileLayer) {
@@ -1326,7 +1359,7 @@
             });
 
             // Add selected base layer
-            switch(selectedLayer) {
+            switch (selectedLayer) {
                 case 'esri':
                     esriWorldImagery.addTo(map);
                     break;
