@@ -2720,6 +2720,7 @@ span {
 
 .coach-position {
     margin-top: 20px;
+    margin-bottom: 20px;
     padding: 15px;
     background-color: #f8f9fa;
     border-radius: 8px;
@@ -2735,11 +2736,26 @@ span {
 
 .coach-sequence {
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     font-size: 14px;
     color: #6c757d;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    padding-bottom: 6px; /* room for scrollbar */
+}
+
+.coach-sequence::-webkit-scrollbar {
+    height: 8px;
+}
+.coach-sequence::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+}
+.coach-sequence::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
 }
 
 .coach {

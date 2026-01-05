@@ -93,7 +93,7 @@ function getCurrentStationIndex(routeData) {
     return routeData.length - 1;
 }
 
-function renderCoachRow(coachInfo) {
+function renderCoachRow(coachInfo, coachPosition, passengerStatus) {
     // coachInfo expected as array of arrays, e.g. [["En","En","En"], ["S","S1","SL"], ...]
     if (!Array.isArray(coachInfo) || coachInfo.length === 0) return '';
     const items = coachInfo.map(item => {
@@ -103,17 +103,25 @@ function renderCoachRow(coachInfo) {
         return { type: (item.type || '').toString(), id: (item.id || '').toString(), cls: (item.cls || '').toString() };
     });
 
-    const parts = items.map(it => {
-        const t = (it.type || '').toLowerCase();
-        if (t === 'en' || t === 'engine') {
-            return `<div class="coach-pill coach-engine" title="Engine"><span class="coach-icon">🚂</span><span class="coach-label">Engine</span></div>`;
-        }
-        const label = it.id || it.type || it.cls || 'Coach';
-        const sub = it.cls && it.cls !== label ? `<small class="coach-sub">${it.cls}</small>` : '';
-        return `<div class="coach-pill" title="${label}"><span class="coach-icon">🟦</span><span class="coach-label">${label}</span>${sub}</div>`;
-    });
 
-    return `<div class="coach-row" aria-hidden="false">${parts.join('')}</div>`;
+    // Build coach position sequence (scrollable). Prefer explicit coachPosition string if provided,
+    // otherwise fall back to the ids from coachInfo items.
+    const sequenceSource = (coachPosition && String(coachPosition).trim()) || items.map(it => it.id || it.type || '').join(' ');
+
+    const coachSequence = (sequenceSource || '').split(/\s+/).filter(Boolean).map(coach => {
+        const isAllocated = passengerStatus && passengerStatus.some(p => p.currentCoachId === coach || p.bookingCoachId === coach);
+        return `<span class="coach ${isAllocated ? 'allocated' : ''}" title="${isAllocated ? 'Your coach' : ''}">${coach}</span>`;
+    }).join(' → ');
+
+    const coachPositionHTML = `
+        <div class="coach-position">
+            <h4>Coach Position</h4>
+            <div class="coach-sequence">
+                ${coachSequence}
+            </div>
+        </div>`;
+
+    return  coachPositionHTML;
 }
 
 async function trackTrain() {
@@ -138,7 +146,6 @@ async function trackTrain() {
         const depTime = trainData.departureTime.split('-')[0].trim();
         const runHour = parseInt(depTime.split(':')[0], 10);
         const runMinute = parseInt(depTime.split(':')[1], 10);
-        // ${renderCoachRow(trainData.coachInfo)}
         const trainStatus = getTrainStatus(new Date(), trainData.runOn, runHour, runMinute, trainData.duration);
         const showTrackButton = trainStatus?.isRunning;
         trainInfoDiv.innerHTML = `
@@ -147,6 +154,7 @@ async function trackTrain() {
                     <div class="train-title-section">
                         <h2>${trainData.trainName} (${trainData.trainNumber})</h2>
                 </div>
+                 ${renderCoachRow(trainData.coachInfo, trainData.coachPosition, trainData.passengerStatus)}
                     <div class="route-segment">
                         <span class="station-code">${trainData.routeData[0].stationCode}</span>
                         <span class="station-name">${trainData.routeData[0].stationName}</span>
@@ -601,12 +609,19 @@ async function updateLiveTrainData(trainNo, isManual = false) {
 
             const trainStatusCard = document.createElement('div');
             trainStatusCard.className = 'train-status-card';
+            // Prepare coach HTML if available in live data (support multiple possible property names)
+            const _coachInfo = data.coachInfo || data.coach_info || data.trainCoach || (data.train && data.train.coachInfo) || null;
+            const _coachPosition = data.coachPosition || data.coach_position || null;
+            const _passengerStatus = data.passengerStatus || data.passenger_status || null;
+            const _coachHTML = (typeof renderCoachRow === 'function') ? renderCoachRow(_coachInfo, _coachPosition, _passengerStatus) : '';
+
             trainStatusCard.innerHTML = `
             <div class="status-header">
                 <h3>${data.trainName || 'Train Status'}</h3>
                 <span class="status-badge ${delayStatus.class}">${delayStatus.text}</span>
             </div>
             <div class="status-content">
+                ${_coachHTML}
                 <p>${data.trainStatus.trainStatus || 'Status information not available'}</p>
                 <div class="status-details">
                     <div class="detail">
@@ -1335,12 +1350,10 @@ function displayBtwResults(trainsData) {
 
         const runHour = parseInt(depTime.split(':')[0], 10);
         const runMinute = parseInt(depTime.split(':')[1], 10);
-        console.log(train.trainNumber);
         var result;
         if (train.runOn.length > 0) {
             result = getTrainStatus(new Date(), train.runOn, runHour, runMinute, train.trainDuration);
         }
-        console.log(train.trainNumber, result);
         const showTrackButton = result?.isRunning;
         console.log(showTrackButton);
         html += `
