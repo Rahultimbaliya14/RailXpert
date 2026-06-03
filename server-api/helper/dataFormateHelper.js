@@ -104,27 +104,26 @@ class DataFormatHelper {
 
     currentTrainStatus(trainData) {
         const data = {}
-        if (trainData.trainCurrentPosition) {
-            data.currentTrainStation = trainData.trainCurrentPosition["Last Station/Location"];
-            data.currentTrainStationSTA = trainData.trainCurrentPosition["Last Station/Location Scheduled Time"];
-            data.currentTrainStationATA = trainData.trainCurrentPosition["Last Station/Location Actual Time"];
-            data.currentTrainStationDelay = trainData.trainCurrentPosition["Last Station/Location Delay"];
-            data.trainStatus = trainData.trainCurrentPosition["Train Status/Last Location"];
-
+        if (trainData.data.currentLocation) {
+            data.currentTrainStation = trainData.data.route.find(s=> s.stationCode == trainData.data.currentLocation.stationCode).stationCode +" (" + trainData.data.route.find(s=> s.stationCode == trainData.data.currentLocation.stationCode).stationName + ")";
+            data.currentTrainStationSTA = trainData.data.route.find(s=> s.stationCode == trainData.data.currentLocation.stationCode).scheduledArrival;
+            data.currentTrainStationATA = trainData.data.route.find(s=> s.stationCode == trainData.data.currentLocation.stationCode).actualArrival;
+            data.currentTrainStationDelay = trainData.data.route.find(s=> s.stationCode == trainData.data.currentLocation.stationCode).delayArrival;
+            data.trainStatus = trainData.data.currentLocation.status;
 
             const arr = []
-            if (trainData.etaTable) {
-                trainData.etaTable.forEach((eta) => {
+            if (trainData.data.route) {
+                trainData.data.route.filter(x=> x.isHalt == true).forEach((route) => {
                     arr.push({
-                        station: eta["Station Name"] + " - " + eta["Station"],
-                        distance: eta["Distance"],
-                        sta: eta["STA"],
-                        eta: eta["ETA"],
-                        std: eta["STD"],
-                        etd: eta["ETD"],
-                        platformNumber: eta["PF"],
-                        arrived: eta["Has Arrived ?"],
-                        delay: eta["Delay"]
+                        station: route.stationName + " - " + route.stationCode,
+                        distance: route.distance,
+                        sta: route.scheduledArrival ?? route.scheduledDeparture,
+                        eta: route.actualArrival ?? route.scheduledDeparture,
+                        std: route.scheduledDeparture ?? "-",
+                        etd: route.actualDeparture ?? "-",
+                        platformNumber: route.platform,
+                        arrived: route.status == "departed" ? true : false,
+                        delay: route.delayArrival ?? 0
                     });
                 });
                 data.station = arr;

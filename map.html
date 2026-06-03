@@ -750,6 +750,7 @@
         var currentStationCode;
         var mainStation = [];
         var station = [];
+        var cords = [];
         var trainData = null;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -902,7 +903,6 @@
                 loadingOverlay.remove();
             }
         }
-
         async function loadTrainData() {
             const requestBody = {
                 trainNumber: trainNumber,
@@ -928,10 +928,10 @@
                 const apiMainStations = trainData.trainStatus.station.map(item => {
                     return item.station.split("-").pop().trim();
                 });
-                const routeStations = trainData.fullRouteData.map(r => r.station.trim());
+                const routeStations = trainData.fullRouteData.map(r => r.stationCode.trim());
                 mainStation = apiMainStations;
                 station = routeStations;
-
+                cords = trainData.cords;
                 // Update the info card
                 updateTrainInfoCard();
                 hideLoadingAnimation();
@@ -1095,7 +1095,6 @@
         // Function to add markers for main stations only
         function addMainStationMarkers() {
             mainStation.forEach(code => {
-                console.log(mainStation);
                 try {
                     const coords = getStnLatLng(code);
                     if (coords && coords.length === 2) {
@@ -1126,26 +1125,8 @@
 
         // Function to get route data for all stations
         function getRouteData() {
-            routeStationData = [];
-
-            station.forEach(code => {
-                try {
-                    const coords = getStnLatLng(code);
-                    if (coords && coords.length === 2) {
-                        const lat = parseFloat(coords[0]);
-                        const lng = parseFloat(coords[1]);
-
-                        routeStationData.push({
-                            code: code,
-                            lat: lat,
-                            lng: lng
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error processing route station ${code}:`, error);
-                }
-            });
-
+            routeStationData = cords;
+            console.log("Route Station Data:", routeStationData);
         }
 
         // Function to draw route connecting all stations
@@ -1160,7 +1141,7 @@
             if (trainMarker) {
                 map.removeLayer(trainMarker);
             }
-
+            console.log("Current Station Code:", currentStationCode);
             // Find the index of current station
             const currentStationIndex = routeStationData.findIndex(s => s.code === currentStationCode);
 
@@ -1331,14 +1312,14 @@
         }
 
         async function initialize() {
-            console.log('Initializing map...');
+
             try {
                 await loadTrainData();
                 getRouteData();
                 addMainStationMarkers();
                 drawRoute();
                 fitMapBounds();
-                console.log('Initialization complete');
+
             } catch (error) {
                 console.error('Initialization failed:', error);
                 showErrorPopup();

@@ -1,16 +1,22 @@
 
 const axios = require('axios');
+const https = require('https');
 const DataFormatHelper = require('../helper/dataFormateHelper');
 
 
 
 exports.getTrainInfo = async (req, res) => {
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
     const envUrl = process.env.GET_TRAIN_INFO;
     const trainNumber = req.params.number;
     const baseUrl = envUrl.replace('{trainNumber}', trainNumber);
 
     try {
-        const response = await axios.get(baseUrl);
+        const response = await axios.get(baseUrl, {
+            httpsAgent: agent
+        });
         const trainData = response.data;
         const formattedData = DataFormatHelper.getTrainInfo(trainData);
         res.json(formattedData);
@@ -21,12 +27,17 @@ exports.getTrainInfo = async (req, res) => {
 };
 
 exports.getTrainRoutInfo = async (req, res) => {
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
     const trainNumber = req.params.number;
     const envUrl = process.env.GET_TRAIN_INFO;
     const baseUrl = envUrl.replace('{trainNumber}', trainNumber);
 
     try {
-        const response = await axios.get(baseUrl);
+        const response = await axios.get(baseUrl, {
+            httpsAgent: agent
+        });
         const trainData = response.data;
         const formattedData = DataFormatHelper.getTrainInfo(trainData);
         if (formattedData.status === 404) {
@@ -35,7 +46,9 @@ exports.getTrainRoutInfo = async (req, res) => {
         else {
             const envurl = process.env.GET_TRAIN_ROUTE_INFO;
             const URL_Train = envurl.replace('{trainId}', formattedData.trainId);
-            const response = await axios.get(URL_Train);
+            const response = await axios.get(URL_Train, {
+                httpsAgent: agent
+            });
             const routeData = response.data;
             const array = DataFormatHelper.getTrainRoutInfo(routeData);
             formattedData.routeData = array;
@@ -48,11 +61,19 @@ exports.getTrainRoutInfo = async (req, res) => {
 };
 
 exports.getTrainCurrentLocation = async (req, res) => {
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
+    var cords = [];
     const trainNumber = req.body.trainNumber;
     const envurl = process.env.GET_TRAIN_INFO;
     const baseUrlTrain = envurl.replace('{trainNumber}', trainNumber);
     try {
-        const response = await axios.get(baseUrlTrain);
+
+        const response = await axios.get(baseUrlTrain, {
+            httpsAgent: agent
+        });
+
         const trainData = response.data;
         const formattedData = DataFormatHelper.getTrainInfo(trainData);
         if (formattedData.status === 404) {
@@ -63,16 +84,24 @@ exports.getTrainCurrentLocation = async (req, res) => {
             const envurl = process.env.GET_TRAIN_CURRENT_LOCATION;
             const baseUrl = envurl.replace('{trainNumber}', trainNumber).replace('{date}', date);
             try {
-                const response = await axios.get(baseUrl);
+                const response = await axios.get(baseUrl, {
+                    httpsAgent: agent
+                });
                 const locationData = response.data;
                 if (locationData != null || locationData != undefined) {
-                    const fullRoute = process.env.GET_TRAIN_FULL_ROUTE;
-                    const fullRouteUrl = fullRoute.replace('{trainNumber}', trainNumber).replace('{date}', date);
-                    const fullRouteResponse = await axios.get(fullRouteUrl);
-                    const fullRouteData = fullRouteResponse.data;
-                    formattedData.fullRouteData = fullRouteData.full_route;
+                    formattedData.fullRouteData = locationData.data.route;
                 }
+
+                locationData.data.route.forEach(route => {
+                    console.log(route);
+                    cords.push({
+                        code: route.stationCode,
+                        lat: route.lat,
+                        lng: route.lng
+                    });
+                });
                 formattedData.trainStatus = DataFormatHelper.currentTrainStatus(locationData);
+                formattedData.cords = cords;
                 res.json(formattedData);
 
             } catch (error) {
@@ -87,6 +116,9 @@ exports.getTrainCurrentLocation = async (req, res) => {
 };
 
 exports.getPNRInfo = async (req, res) => {
+      const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
     const pnrNumber = req.body.pnrNumber;
     const envurl = process.env.GET_PNR_INFO;
     try {
@@ -97,7 +129,9 @@ exports.getPNRInfo = async (req, res) => {
             tempToken: ""
         };
 
-        const response = await axios.post(baseUrl, requestBody);
+        const response = await axios.post(baseUrl, requestBody, {
+                    httpsAgent: agent
+                });
         const pnrData = response.data;
 
         const formattedData = DataFormatHelper.getPNRInfo(pnrData);
@@ -110,13 +144,16 @@ exports.getPNRInfo = async (req, res) => {
 }
 
 exports.getBetweenTrain = async (req, res) => {
+    const agent = new https.Agent({
+        rejectUnauthorized: false
+    });
     const fromStation = req.body.fromStation;
     const toStation = req.body.toStation;
     const baseUrlTrain = process.env.GET_BETWEEN_TRAIN
         .replace('{fromStation}', fromStation)
         .replace('{toStation}', toStation);
     try {
-        const response = await axios.get(baseUrlTrain);
+        const response = await axios.get(baseUrlTrain, { httpsAgent: agent });
         const trainData = DataFormatHelper.getBetweenTrain(response.data);
         if (trainData.data.length > 0) {
             const envUrl = process.env.GET_TRAIN_INFO;
@@ -124,11 +161,11 @@ exports.getBetweenTrain = async (req, res) => {
                 const trainNumber = element.trainNumber;
                 const baseUrl = envUrl.replace('{trainNumber}', trainNumber);
                 try {
-                    const response = await axios.get(baseUrl);
+                    const response = await axios.get(baseUrl, { httpsAgent: agent });
                     const trainInfo = response.data;
                     const formattedData = DataFormatHelper.getTrainInfo(trainInfo);
                     element.runOn = formattedData.runOn;
-                    element.trainDuration = formattedData.duration;    
+                    element.trainDuration = formattedData.duration;
                     element.travelingKMS = formattedData.travelingKMS;
                     element.fromStationDepature = formattedData.departureTime;
                     element.toStationArrival = formattedData.arrivalTime;

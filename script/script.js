@@ -265,6 +265,22 @@ function formatTime(timeStr) {
     return `${hour12}:${minutes} ${ampm} (${date})`;
 }
 
+function formatDateForUser(date) {
+    const d = new Date(date);
+
+    if (!(d instanceof Date) || Number.isNaN(d.getTime())) {
+        return '-';
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+}
+
 function showLoading(show) {
     const loading = document.getElementById('loading');
     const content = document.getElementById('content');
@@ -283,11 +299,7 @@ let isManualRefresh = false;
 
 function formatDateForAPI(date) {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = monthNames[d.getMonth()];
-    const year = String(d.getFullYear()).slice(-2);
-    return `${day}-${month}-${year}`;
+    return d.toISOString().split('T')[0];
 }
 
 function initializeDatePicker() {
@@ -411,21 +423,21 @@ async function updateLiveTrainData(trainNo, isManual = false) {
             const routeStations = data.fullRouteData != null ? data.fullRouteData.filter(s => s != null && s != undefined) : [];
 
             let currentStationIndex = routeStations.findIndex(s =>
-                s.station.toLowerCase() === currentStationName.toLowerCase()?.trim()
+                s.stationCode.toLowerCase() === currentStationName.toLowerCase()?.trim()
             );
 
             // Find the last arrived station for progress calculation
             const lastArrivedStation = [...data.trainStatus.station].reverse().find(s => s.arrived === "Yes" || !s.platformNumber.includes('*'));
             let currentActual = data.fullRouteData != null ? routeStations.findIndex(s =>
-                s.station.toLowerCase() === currentStationName.toLowerCase()?.trim()
+                s.stationCode.toLowerCase() === currentStationName.toLowerCase()?.trim()
             ) : data.trainStatus.station.findIndex(s =>
-                s.station && currentStation &&
-                s.station.toLowerCase().includes(lastArrivedStation.station.toLowerCase().split('-')[0].trim())
+                s.stationCode && currentStation &&
+                s.stationCode.toLowerCase().includes(lastArrivedStation.station.toLowerCase().split('-')[0].trim())
             );
             if (currentStationIndex === -1) currentStationIndex = 0;
 
             // Find last stopped station
-            const arrivedStations = data.trainStatus.station.filter(s => s.arrived === "Yes");
+            const arrivedStations = data.trainStatus.station.filter(s => s.arrived);
             const lastStoppedStation = arrivedStations[arrivedStations.length - 1];
 
             // Find the next stopping station based on last stopped station
@@ -520,13 +532,11 @@ async function updateLiveTrainData(trainNo, isManual = false) {
                 }
                 else {
                     const stationItems = data.fullRouteData.map((station, index) => {
-                        const stoppingInfo = stoppingStations.get(station.station_name);
-                        const isStoppingStation = station.wtt_stop === 'Y';
-                        const isCurrent = (station.station + " (" + station.station_name + ")").toLowerCase() === data.trainStatus.currentTrainStation.toLowerCase();
+                        const stoppingInfo = stoppingStations.get(station.stationName);
+                        const isStoppingStation = station.isHalt;
+                        const isCurrent = (station.stationCode + " (" + station.stationName + ")").toLowerCase() === data.trainStatus.currentTrainStation.toLowerCase();
 
-                        const isPassed = stoppingInfo?.arrived === 'Yes' ||
-                            stoppingInfo?.arrived === '-' ||
-                            (stoppingInfo && !stoppingInfo.platformNumber?.includes('*')) ||
+                        const isPassed = stoppingInfo?.arrived
                             index < currentStationIndex;
                         const status = isPassed ? 'Departed' : isCurrent ? 'Current' : 'Upcoming';
 
@@ -539,8 +549,8 @@ async function updateLiveTrainData(trainNo, isManual = false) {
                 <div class="station-details ${!isStoppingStation ? 'pass-through-details' : ''}">
                     <div class="station-header">
                         <div class="station-title">
-                            <span class="station-name">${station.station_name}</span>
-                            <span class="station-code">${station.station}</span>
+                            <span class="station-name">${station.stationName}</span>
+                            <span class="station-code">${station.stationCode}</span>
                         </div>
                         <div class="station-badges">
                             ${!isStoppingStation ?
@@ -553,20 +563,20 @@ async function updateLiveTrainData(trainNo, isManual = false) {
                     <div class="station-times">
                         <div class="time-block">
                             <span class="time-label">Sch. Arrival</span>
-                            <span class="time-value">${stoppingInfo.sta?.split(' ')[0] || '--:--'}</span>
+                            <span class="time-value">${formatDateForUser(stoppingInfo.sta?.split(' ')[0]) || '--:--'}</span>
                         </div>
                         <div class="time-block">
                             <span class="time-label">Sch. Departure</span>
-                            <span class="time-value">${stoppingInfo.std?.split(' ')[0] || '--:--'}</span>
+                            <span class="time-value">${formatDateForUser(stoppingInfo.std?.split(' ')[0]) || '--:--'}</span>
                         </div>
                         <div class="time-divider"></div>
                         <div class="time-block">
                             <span class="time-label">Exp. Arrival</span>
-                            <span class="time-value">${stoppingInfo.eta?.split(' ')[0] || '--:--'}</span>
+                            <span class="time-value">${formatDateForUser(stoppingInfo.eta?.split(' ')[0]) || '--:--'}</span>
                         </div>
                         <div class="time-block">
                             <span class="time-label">Exp. Departure</span>
-                            <span class="time-value">${stoppingInfo.etd?.split(' ')[0] || '--:--'}</span>
+                            <span class="time-value">${formatDateForUser(stoppingInfo.etd?.split(' ')[0]) || '--:--'}</span>
                         </div>
                         <div class="station-meta">
                             <div class="platform-info">
@@ -630,11 +640,11 @@ async function updateLiveTrainData(trainNo, isManual = false) {
                     </div>
                     <div class="detail">
                         <span class="label">Scheduled Arrival:</span>
-                        <span class="value">${data.trainStatus.currentTrainStationSTA || '--'}</span>
+                        <span class="value">${formatDateForUser(data.trainStatus.currentTrainStationSTA) || '--'}</span>
                     </div>
                     <div class="detail">
                         <span class="label">Actual Arrival:</span>
-                        <span class="value">${data.trainStatus.currentTrainStationATA || '--'}</span>
+                        <span class="value">${formatDateForUser(data.trainStatus.currentTrainStationATA)     || '--'}</span>
                     </div>
                 </div>
             </div>
@@ -1293,9 +1303,7 @@ async function fetchTrainsBetweenStations(fromStation, toStation) {
 
 function redirectToMap(trainNumber, journeyDate) {
     const journeyDateObj = new Date(journeyDate);
-    const options = { day: '2-digit', month: 'short', year: '2-digit' };
-    const formattedDate = journeyDateObj.toLocaleDateString('en-GB', options).replace(/ /g, '-');
-
+    const formattedDate = formatDateForAPI(journeyDateObj);
     const data = {
         trainNumber: trainNumber,
         date: formattedDate,
