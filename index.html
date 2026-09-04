@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>RailXpertᴵᴺᴰᴵᴬ</title>
+    <title>RailXpertᴵᴺᴰᴵᴬ — Live Train Tracking &amp; Route Enquiry</title>
+    <meta name="description" content="Track live train location, check route schedules, find trains between stations and enquire PNR status — all in one place.">
+    <meta name="theme-color" content="#101826">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style/style.css">
     <link rel="icon" type="image/png" href="assests/favicon.ico">
     <script src="script/encryptionHelper.js"></script>
@@ -15,7 +19,7 @@
 
 <body>
     <div class="container">
-    <h1><span class="brand">RailXpert</span> <span class="flag-text">ᴵᴺᴰᴵᴬ</span></h1>
+        <h1><span class="brand">RailXpert</span><span class="flag-text">ᴵᴺᴰᴵᴬ</span></h1>
 
         <!-- Tabs Container with Scroll -->
         <div class="tabs-wrapper">
@@ -163,24 +167,27 @@
         <!-- BTW Station Tab -->
         <div id="btw-tab" class="tab-content">
             <div class="btw-search-container">
-                <div class="station-input-group">
-                    <label for="fromStationBtw">From Station</label>
-                    <input type="text" id="fromStationBtw" placeholder="Enter Station Name/Code" autocomplete="off"
-                        required>
-                    <div id="fromSuggestionsContainer" class="suggestions-container"></div>
-                </div>
-                <button id="swapStationsBtn" class="swap-stations-btn" title="Swap Stations">
-                    <span>Swap ⇅ Stations</span>
-                </button>
-                <div class="station-input-group">
-                    <label for="toStationBtw">To Station</label>
-                    <input type="text" id="toStationBtw" placeholder="Enter Station Name/Code" autocomplete="off"
-                        required>
-                    <div id="toSuggestionsContainer" class="suggestions-container"></div>
+                <div class="btw-stations-container">
+                    <div class="station-input-group">
+                        <label for="fromStationBtw">From station</label>
+                        <input type="text" id="fromStationBtw" placeholder="Station name or code" autocomplete="off"
+                            required>
+                        <div id="fromSuggestionsContainer" class="suggestions-container"></div>
+                    </div>
+                    <button id="swapStationsBtn" class="swap-stations-btn" title="Swap stations"
+                        aria-label="Swap from and to stations">
+                        <span>⇅ Swap</span>
+                    </button>
+                    <div class="station-input-group">
+                        <label for="toStationBtw">To station</label>
+                        <input type="text" id="toStationBtw" placeholder="Station name or code" autocomplete="off"
+                            required>
+                        <div id="toSuggestionsContainer" class="suggestions-container"></div>
+                    </div>
                 </div>
                 <button id="searchBtwButton" class="btw-search-button">
                     <span class="spinner"></span>
-                    <span class="button-text">Search Trains</span>
+                    <span class="button-text">Search trains</span>
                 </button>
             </div>
             <div id="btwResult" class="btw-result">

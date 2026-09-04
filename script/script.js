@@ -70,10 +70,6 @@ async function fetchTrainData(trainNumber) {
     }
 }
 
-function formatTime(timeStr) {
-    return timeStr.replace(' - Day 1', '');
-}
-
 function getCurrentStationIndex(routeData) {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
